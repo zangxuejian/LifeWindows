@@ -1,13 +1,20 @@
 import { useMemo, useState } from "react";
 import { categoryOptions, lifeStageOptions } from "../config";
-import { featuredLifeWindows, lifeWindowsV2 } from "../data/windows";
+import { overviewLifeWindows } from "../data/overviewWindows";
+import { lifeWindowsV2 } from "../data/windows";
+import { useTimelineScale } from "../hooks/useTimelineScale";
+import { ageToRangePosition, getAgeTicks } from "../lib/timeScale";
+import type { TimelineScale } from "../lib/timeScale";
 import { getWindowRangeYears } from "../lib/windowStatus";
 import type { LifeStage, LifeWindowV2, WindowCategory } from "../types";
+import { AgeTicks } from "./AgeTicks";
+import { TimelineScaleToggle } from "./TimelineScaleToggle";
 import { WindowCard } from "./WindowCard";
 
 interface CardLayout {
   window: LifeWindowV2;
   left: number;
+  width: number;
   lane: number;
 }
 
@@ -16,50 +23,44 @@ function overlapsRange(window: LifeWindowV2, start: number, end: number): boolea
   return range.start <= end && range.end >= start;
 }
 
-function layoutCards(windows: LifeWindowV2[], start: number, end: number): { cards: CardLayout[]; lanes: number } {
-  const span = Math.max(0.25, end - start);
-  const cardFootprint = span <= 3 ? 30 : span <= 15 ? 22 : span <= 35 ? 17 : 13;
+function layoutCards(
+  windows: LifeWindowV2[],
+  start: number,
+  end: number,
+  scale: TimelineScale,
+): { cards: CardLayout[]; lanes: number } {
   const laneEnds: number[] = [];
   const ordered = [...windows].sort((a, b) => {
-    const aStart = getWindowRangeYears(a).start;
-    const bStart = getWindowRangeYears(b).start;
+    const aStart = ageToRangePosition(getWindowRangeYears(a).start, start, end, scale);
+    const bStart = ageToRangePosition(getWindowRangeYears(b).start, start, end, scale);
     return aStart - bStart || (b.priority ?? 0) - (a.priority ?? 0);
   });
 
   const cards = ordered.map((window) => {
     const range = getWindowRangeYears(window);
-    const rawLeft = ((Math.max(start, range.start) - start) / span) * 100;
-    const left = Math.min(96, Math.max(4, rawLeft));
+    const left = ageToRangePosition(Math.max(start, range.start), start, end, scale) * 100;
+    const right = ageToRangePosition(Math.min(end, range.end), start, end, scale) * 100;
+    const mappedSpan = Math.max(0.5, right - left);
+    const width = Math.round(Math.min(344, Math.max(222, 205 + mappedSpan * 4.2)));
+    const footprint = Math.max(18.5, width / 12.4) + 1.5;
     let lane = laneEnds.findIndex((laneEnd) => left >= laneEnd);
     if (lane === -1) lane = laneEnds.length;
-    laneEnds[lane] = left + cardFootprint;
-    return { window, left, lane };
+    laneEnds[lane] = left + footprint;
+    return { window, left, width, lane };
   });
 
   return { cards, lanes: Math.max(1, laneEnds.length) };
 }
 
-function buildTicks(start: number, end: number): number[] {
-  const span = end - start;
-  const step = span <= 1 ? 0.25 : span <= 3 ? 0.5 : span <= 12 ? 1 : span <= 25 ? 2 : span <= 50 ? 5 : 10;
-  const ticks: number[] = [];
-  for (let tick = start; tick <= end + 0.001; tick += step) ticks.push(Number(tick.toFixed(2)));
-  return ticks;
-}
-
-function formatTick(tick: number, span: number): string {
-  if (span <= 3 && tick < 1) return `${Math.round(tick * 12)}月`;
-  return Number.isInteger(tick) ? `${tick}` : tick.toFixed(1);
-}
-
 export function LifeTimeline({ age }: { age: number }) {
+  const { scale } = useTimelineScale();
   const [stage, setStage] = useState<"all" | LifeStage>("all");
   const [category, setCategory] = useState<"all" | WindowCategory>("all");
   const stageOption = lifeStageOptions.find((option) => option.id === stage) ?? lifeStageOptions[0];
   const { startYear, endYear } = stageOption;
 
   const visibleWindows = useMemo(() => {
-    const pool = stage === "all" && category === "all" ? featuredLifeWindows : lifeWindowsV2;
+    const pool = stage === "all" && category === "all" ? overviewLifeWindows : lifeWindowsV2;
     return pool.filter((window) => {
       const categoryMatches = category === "all" || window.category === category;
       return categoryMatches && overlapsRange(window, startYear, endYear);
@@ -67,22 +68,25 @@ export function LifeTimeline({ age }: { age: number }) {
   }, [category, endYear, stage, startYear]);
 
   const layout = useMemo(
-    () => layoutCards(visibleWindows, startYear, endYear),
-    [endYear, startYear, visibleWindows],
+    () => layoutCards(visibleWindows, startYear, endYear, scale),
+    [endYear, scale, startYear, visibleWindows],
   );
-  const ticks = useMemo(() => buildTicks(startYear, endYear), [endYear, startYear]);
-  const span = endYear - startYear;
-  const agePosition = ((age - startYear) / Math.max(0.25, span)) * 100;
+  const ticks = useMemo(() => getAgeTicks(scale, startYear, endYear), [endYear, scale, startYear]);
+  const agePosition = ageToRangePosition(age, startYear, endYear, scale) * 100;
   const ageInRange = age >= startYear && age <= endYear;
 
   return (
     <section className="v2-timeline" id="timeline" aria-labelledby="timeline-heading">
       <div className="v2-timeline__heading">
         <div>
+          <span>THE LIFE MAP</span>
           <h2 id="timeline-heading">人生时间轴</h2>
           <p>每一张卡片，都是一段有边界的机会。</p>
         </div>
-        <p className="v2-timeline__hint">左右滑动，查看完整人生</p>
+        <div className="v2-timeline__heading-actions">
+          <TimelineScaleToggle />
+          <p className="v2-timeline__hint">左右滑动，查看完整人生</p>
+        </div>
       </div>
 
       <div className="v2-stage-tabs" role="tablist" aria-label="按人生阶段聚焦">
@@ -104,25 +108,38 @@ export function LifeTimeline({ age }: { age: number }) {
         <span className="is-active"><i />正在经历</span>
         <span className="is-closing"><i />即将关闭</span>
         <span className="is-future"><i />未来开启</span>
-        <span className="is-possible"><i />仍可进行</span>
+        <span className="is-possible"><i />黄金期已过 · 仍可进行</span>
       </div>
 
       <div className="v2-timeline__viewport" tabIndex={0} aria-label="可横向滚动的人生窗口卡片时间轴">
-        <div className="v2-timeline__canvas" style={{ "--timeline-height": `${84 + layout.lanes * 94}px` } as React.CSSProperties} data-testid="timeline-canvas">
-          <div className="v2-timeline__ruler" aria-hidden="true">
-            {ticks.map((tick) => <span key={tick} style={{ left: `${((tick - startYear) / span) * 100}%` }}>{formatTick(tick, span)}</span>)}
-          </div>
+        <div
+          className="v2-timeline__canvas"
+          style={{ "--timeline-height": `${132 + layout.lanes * 112}px` } as React.CSSProperties}
+          data-testid="timeline-canvas"
+          data-scale={scale}
+        >
+          <AgeTicks scale={scale} startAge={startYear} endAge={endYear} className="v2-timeline__ruler" />
           <div className="v2-timeline__grid" aria-hidden="true">
-            {ticks.map((tick) => <i key={tick} style={{ left: `${((tick - startYear) / span) * 100}%` }} />)}
+            {ticks.map((tick) => <i key={tick} style={{ left: `${ageToRangePosition(tick, startYear, endYear, scale) * 100}%` }} />)}
           </div>
           {ageInRange ? <div className="v2-timeline__now" style={{ left: `${agePosition}%` }} data-testid="current-age-line"><span>{age}</span></div> : null}
-          {layout.cards.map(({ window, left, lane }) => (
-            <WindowCard key={window.slug} window={window} age={age} compact style={{ left: `clamp(98px, ${left}%, calc(100% - 98px))`, top: `${62 + lane * 94}px` }} />
+          {layout.cards.map(({ window, left, width, lane }) => (
+            <WindowCard
+              key={window.slug}
+              window={window}
+              age={age}
+              compact
+              style={{
+                left: `clamp(24px, ${left}%, calc(100% - ${width + 24}px))`,
+                top: `${76 + lane * 112}px`,
+                width: `${width}px`,
+              }}
+            />
           ))}
           {layout.cards.length === 0 ? <p className="v2-timeline__empty">这一视图暂无匹配窗口，试试其他主题。</p> : null}
         </div>
       </div>
-      <p className="v2-timeline__caption">当前聚焦：{stageOption.label} · {categoryOptions.find((item) => item.id === category)?.label}</p>
+      <p className="v2-timeline__caption">当前聚焦：{stageOption.label} · {categoryOptions.find((item) => item.id === category)?.label} · {scale === "linear" ? "客观年龄" : "时间压缩视图"}</p>
     </section>
   );
 }
