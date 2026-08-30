@@ -1,36 +1,39 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { Header } from "./components/Header";
 import { AgeProvider } from "./context/AgeProvider";
-import { Ask } from "./pages/Ask";
-import { Home } from "./pages/Home";
-import { Now } from "./pages/Now";
-import { WindowDetail } from "./pages/WindowDetail";
+import { LegacyHome } from "./legacy/LegacyHome";
+import { V2Layout } from "./v2/layout/V2Layout";
+import { Explore } from "./v2/pages/Explore";
+import { V2Home } from "./v2/pages/Home";
+import { V2WindowDetail } from "./v2/pages/WindowDetail";
 
-function ScrollToTop() {
-  const { pathname } = useLocation();
+function ScrollManager() {
+  const { pathname, hash } = useLocation();
+
   useEffect(() => {
+    if (hash) {
+      window.requestAnimationFrame(() => document.querySelector(hash)?.scrollIntoView({ behavior: "smooth" }));
+      return;
+    }
     window.scrollTo({ top: 0, behavior: "auto" });
-  }, [pathname]);
+  }, [hash, pathname]);
+
   return null;
 }
 
 export default function App() {
   return (
     <AgeProvider>
-      <ScrollToTop />
-      <Header />
+      <ScrollManager />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/now" element={<Now />} />
-        <Route path="/ask" element={<Ask />} />
-        <Route path="/window/:slug" element={<WindowDetail />} />
-        <Route path="*" element={<Home />} />
+        <Route path="/legacy" element={<LegacyHome />} />
+        <Route element={<V2Layout />}>
+          <Route path="/" element={<V2Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/window/:slug" element={<V2WindowDetail />} />
+          <Route path="*" element={<V2Home />} />
+        </Route>
       </Routes>
-      <footer className="site-footer page-shell">
-        <p>人生窗口期 · Life Windows</p>
-        <p>年龄是观察坐标，不是价值判断。</p>
-      </footer>
     </AgeProvider>
   );
 }

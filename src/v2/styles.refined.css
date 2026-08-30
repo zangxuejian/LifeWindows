@@ -1,0 +1,17 @@
+.v2-root {
+  background: var(--v2-canvas);
+}
+
+@media (min-width: 801px) {
+  .v2-hero {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: clamp(54px, 5vw, 72px);
+  }
+
+  .v2-hero__intro h1 {
+    max-width: none;
+    font-size: clamp(36px, 3vw, 43px);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}
