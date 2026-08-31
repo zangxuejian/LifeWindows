@@ -1,0 +1,60 @@
+import {
+  Activity,
+  Baby,
+  BadgeCheck,
+  Bone,
+  BookOpen,
+  BriefcaseBusiness,
+  CalendarDays,
+  CarFront,
+  Compass,
+  Ear,
+  Eye,
+  Footprints,
+  GraduationCap,
+  HeartPulse,
+  Landmark,
+  MessageCircleMore,
+  Rocket,
+  School,
+  ShieldCheck,
+  SmilePlus,
+  Trophy,
+  Utensils,
+  UsersRound,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
+import type { WindowIconName } from "../types";
+
+const icons: Record<WindowIconName, LucideIcon> = {
+  baby: Baby,
+  ear: Ear,
+  heart: HeartPulse,
+  footprints: Footprints,
+  utensils: Utensils,
+  message: MessageCircleMore,
+  tooth: SmilePlus,
+  school: School,
+  book: BookOpen,
+  eye: Eye,
+  waves: Waves,
+  activity: Activity,
+  graduation: GraduationCap,
+  briefcase: BriefcaseBusiness,
+  trophy: Trophy,
+  users: UsersRound,
+  rocket: Rocket,
+  compass: Compass,
+  shield: ShieldCheck,
+  calendar: CalendarDays,
+  bone: Bone,
+  landmark: Landmark,
+  car: CarFront,
+  badge: BadgeCheck,
+};
+
+export function WindowIcon({ name, size = 32 }: { name: WindowIconName; size?: number }) {
+  const Icon = icons[name];
+  return <Icon width={size} height={size} aria-hidden="true" />;
+}

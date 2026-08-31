@@ -1,61 +1,45 @@
-# Life Windows V2 Design QA
+# Life Windows V3 Design QA
 
-## Comparison target
+## Comparison setup
 
-- Source visual truth: `C:/Users/zangx/AppData/Local/Temp/codex-clipboard-81e42618-fd63-435d-bcf6-4253e9bd341d.png`
-- Source pixels: 1448 × 1086.
-- Browser implementation: `design/v2/final/v2-home-linear-desktop.png`
-- Implementation pixels: 1425 × 891.
-- Configured CSS viewport: 1440 × 900 at device scale factor 1. The in-app browser capture area was 1425 × 891 after scrollbar/browser-surface reservation.
-- Normalization: the source was top-cropped to the implementation aspect ratio, then resized to 1425 × 891. No density upscaling was used.
-- State: home route, current age 33, objective-age mode, all stages, all categories.
-- Full-view same-input evidence: `design/v2/final/design-qa-full-comparison.png`
-- Focused timeline same-input evidence: `design/v2/final/design-qa-timeline-comparison.png`
-- Scale transformation evidence: `design/v2/final/scale-mode-comparison-desktop.png` and `design/v2/final/scale-mode-comparison-mobile.png`
+- Reference 1: `C:\Users\zangx\AppData\Local\Temp\codex-clipboard-ea6fa055-1795-4834-b1d6-5ac0e4d0725a.png`
+- Reference 2: `C:\Users\zangx\AppData\Local\Temp\codex-clipboard-4f0fc7e5-12e8-44d2-9470-602017778cd3.png`
+- Implementation state: V3 home at age 33.
+- Exact comparison viewport: 1488 × 1056 CSS pixels at device scale factor 1.
+- Responsive viewport: 390 × 844 CSS pixels at device scale factor 1.
+- Combined comparison input: `C:\Users\zangx\.codex\visualizations\2026\08\30\01a0506b-e65f-7440-b6e4-27395e6037f3\v3-reference-comparison.jpg`
 
-## Findings
+## Fidelity review
 
-No actionable P0, P1, or P2 differences remain.
+- Typography: the editorial Chinese serif hierarchy, compact bilingual brand, numeric age readout, and consistent card sequence (title, age range, category, status) preserve reference 1's clarity.
+- Layout: the home page uses one restrained hero and three organic event fields. 正盛 is the dominant field, 将谢 is secondary, and 余温 is quieter and smaller, matching reference 2's spatial hierarchy without restoring a timeline or dashboard.
+- Spacing: cards are capped at 4 / 4 / 2 visible items. Controlled offsets remain on desktop, but widths are reduced where shifted so cards never overlap. Mobile removes offsets and stacks groups and cards vertically.
+- Color: the page canvas remains warm near-white. Saturated color is confined to cards, borders, badges, and low-contrast group atmospheres. 正盛 uses mint/teal, 将谢 uses amber/orange, and 余温 uses desaturated blue-gray.
+- Surfaces: group radii are asymmetric but restrained. Cards keep clear boundaries and modest elevation. Botanical illustration textures and pronounced card rotations were intentionally not copied because the brief asked for a mature product surface rather than a poster.
+- Icons: all event icons use the existing Lucide line-icon family with consistent stroke weight; no emoji, placeholder art, or handcrafted SVG illustration substitutes are used in the UI.
+- Copy: hero and group copy stays brief and supports the event field rather than competing with it.
 
-- Typography: passed. The implementation keeps the reference's Chinese serif display hierarchy, compact utility text, deep navy tone, and restrained weights. The hero, age readout, summary numerals, and timeline title remain optically distinct without wrapping at 1440 × 900 or 1280 × 800.
-- Spacing and layout rhythm: passed. Header, hero/age split, compact summary strip, and timeline order follow the reference. The timeline is intentionally taller and its cards larger than the reference because the requested product change prioritizes card scanning over a dense static overview.
-- Colors and visual tokens: passed. The former page-wide beige field was removed. Warm near-white canvas, white cards, low-contrast gray grid lines, deep navy text, teal active, amber closing, blue future, blue-gray possible, and fully desaturated memorial-gray closed states now match the target direction.
-- Image quality and asset fidelity: passed for the requested scope. The auxiliary illustrations and avatar visible in the reference were intentionally not introduced because the brief explicitly lowers decoration outside the timeline. No placeholder art, CSS illustration, handcrafted SVG, emoji, or fake image asset was substituted. Existing line icons remain a consistent project-wide icon family.
-- Copy and content: passed. The interface describes a life-event time map, labels the experimental model as “相对时间模型（仅用于说明）”, and preserves “黄金窗口已过 ≠ 硬限制关闭”.
-- States and interactions: passed. Objective/relative toggle, explanation popover, stage/category tabs, real-age input, inverse-mapped range control, current-age line, card status changes, detail stage map, and route links were exercised.
-- Accessibility: passed for the tested surfaces. Controls have semantic roles and labels, keyboard endpoint handling reaches ages 0 and 100, focus states remain visible, tap targets remain usable at 390 px, and reduced-motion CSS removes the 380 ms layout transition.
-- Responsive behavior: passed at configured 1440 × 900, 1280 × 800, and 390 × 844. Mobile keeps the scale control on its own row and makes the timeline horizontally scrollable instead of compressing cards below readable width.
+## Interaction and lifecycle review
 
-## Comparison history
+- The age slider is the only time controller; no timeline grid or objective/relative scale switch appears on V3.
+- `notBorn` and `gone` are not rendered. `emerging`, `fresh`, and `mature` enter 正盛; `withering` enters 将谢; `memorial` enters 余温.
+- Shared Framer Motion `layoutId` values keep the same card continuous across groups. A browser trace verified 第一次创业 at age 33 in 正盛, age 37 in 将谢, age 40.5 in 余温, and removed at age 43.
+- Motion uses 360 ms ease-out layout/opacity/scale changes, no bounce, and respects `prefers-reduced-motion`.
+- Detail routing and the age slider were verified on `/v3/window/adolescent-orthodontics?age=18`.
 
-1. Baseline/current screenshot finding — P1: the V2 page used a nearly continuous beige canvas, so cards, sections, and grid had weak separation. Fix: replaced the global palette with warm near-white and white surfaces, preserved color only for state and small accents, and strengthened gray dividers. Post-fix evidence: `design/v2/final/design-qa-full-comparison.png`.
-2. Baseline/current screenshot finding — P1: large supporting card regions competed with the event map. Fix: converted “你现在还能做什么” and “接下来什么会关闭” into two compact secondary lists below the timeline. Post-fix evidence: browser full-page inspection and the final home implementation.
-3. First browser iteration finding — P2: the initial 27-card overview produced a 1924 px timeline canvas, making scanning excessively vertical. Fix: introduced an age-balanced 16-card overview while retaining all 88 cards through stage/category filters and the Explore route. The final objective canvas is 1028 px and still deliberately larger than the previous V2 timeline. Post-fix evidence: `design/v2/final/v2-home-linear-desktop.png` and `design/v2/final/v2-home-linear-mobile.png`.
-4. Final comparison: no actionable P0/P1/P2 mismatch remained. Objective and relative screenshots show age 10 moving from 10% to 36.08%, the 90 tick being removed from the crowded relative axis, and cards changing position, width, and lane packing.
+## Responsive and accessibility review
 
-## Browser verification
+- Desktop was checked at 1440 × 1024 and the exact 1488 × 1056 reference viewport.
+- Mobile was checked at 390 × 844; measured `scrollWidth` is 390, with no horizontal overflow.
+- The slider and navigation are semantic controls with accessible labels. Cards are links, focus styles match hover elevation, and reduced motion is supported.
+- At 60 years the page still renders 10 active windows, including 9 in 正盛 and 1 in 将谢; the late-life field is not blank.
 
-- Page identity: passed for `/`, `/window/orthodontics-golden-period`, and V2 title.
-- Meaningful render / framework overlay: passed; no blank shell or Vite/React error overlay.
-- Console: no relevant warnings or errors across desktop, mobile, home, and detail states.
-- Relative annual proportion: 8 → 12.5%, 33 → 3.0%, 80 → 1.25%.
-- Slider endpoints in relative mode: Home key → real age 0 / slider position 0; End key → real age 100 / slider position 10000.
-- Detail transformation: adult orthodontic stage changed from left 45%, width 55% to left 69.45%, width 30.55%.
-- Primary interactions tested: scale toggle, info popover open/close, body category filter, age input, slider endpoints, mobile scale switch, detail scale switch.
+## Iteration history
 
-## Follow-up polish
+1. Initial browser pass exposed a hidden transition card caused by the three-card 将谢 cap and a missing favicon request.
+2. The cap was raised to four and the favicon was embedded; the cross-group trace became continuous and browser console errors dropped to zero.
+3. Exact-viewport comparison exposed a compressed center gap and excess dead space in 正盛. The shifted card width, card heights, and group height were corrected, then desktop/mobile screenshots were refreshed.
 
-- P3: the 16-card default overview favors readability over the reference's denser single-screen map. A later optional pass could add a “紧凑 / 舒展” density preference without changing event coordinates.
-- P3: the Chinese display font uses system serif fallbacks; exact appearance can vary slightly by operating system font availability.
+## Final result
 
-## Implementation checklist
-
-- [x] Reference-derived warm-white visual hierarchy.
-- [x] Timeline and Window Cards promoted to the primary surface.
-- [x] Objective and relative scales share one mapping abstraction.
-- [x] Slider, ticks, age line, cards, and detail timeline transform together.
-- [x] Closed state uses explicit memorial-gray styling instead of opacity.
-- [x] Desktop and mobile interactions and console verified.
-- [x] Unit tests, build, lint, and browser QA passed.
-
-final result: passed
+Pass. The implementation preserves reference 1's scan-friendly card system and reference 2's breathing three-field composition while keeping the product's lifecycle interaction central. Remaining product risk is content authority: policy and medical entries are explicitly marked as editorial examples and still need jurisdiction-specific source review before production use.
