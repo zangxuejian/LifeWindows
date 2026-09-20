@@ -1,16 +1,10 @@
 import { Link } from "react-router-dom";
+import { useV3Age } from "../hooks/useV3Age";
 
 export function V3Footer() {
-  return (
-    <footer className="v3-footer" id="principles">
-      <div className="v3-shell v3-footer__inner">
-        <p>年龄是观察坐标。医疗、政策与机构窗口请以所在地专业建议和当期规则为准。</p>
-        <nav aria-label="页脚导航">
-          <a href="#principles">数据与依据</a>
-          <Link to="/v2">V2 时间地图</Link>
-          <Link to="/legacy">V1</Link>
-        </nav>
-      </div>
-    </footer>
-  );
+  const { currentAgeMonths } = useV3Age();
+  return <footer className="v3-footer"><div className="v3-shell v3-footer__inner">
+    <p><strong>Life Windows</strong><br />理解阶段，把生活留给自己。</p>
+    <nav aria-label="页脚导航"><Link to={`/v3/about?age=${currentAgeMonths / 12}`}>数据与依据</Link><Link to={`/v3/about?age=${currentAgeMonths / 12}#privacy`}>隐私说明</Link><Link to="/v2">V2 时间地图</Link><Link to="/legacy">V1 归档</Link></nav>
+  </div></footer>;
 }

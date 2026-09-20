@@ -3,6 +3,24 @@ import type { AgePoint, ExpiringLifeWindow } from "../types";
 export const MONTHS_PER_YEAR = 12;
 export const MAX_AGE_MONTHS = 100 * MONTHS_PER_YEAR;
 
+function parseFiniteNumber(value: string | null): number | null {
+  if (value === null || value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Parses the public `age` query parameter, whose unit is years. */
+export function parseAgeQuery(search: string): number | null {
+  const years = parseFiniteNumber(new URLSearchParams(search).get("age"));
+  return years === null ? null : clampAgeMonths(years * MONTHS_PER_YEAR);
+}
+
+/** Parses the persisted value, whose unit is months. */
+export function parseStoredAge(value: string | null): number | null {
+  const months = parseFiniteNumber(value);
+  return months === null ? null : clampAgeMonths(months);
+}
+
 export function agePointToMonths(point: AgePoint): number {
   return point.unit === "year" ? Math.round(point.value * MONTHS_PER_YEAR) : Math.round(point.value);
 }
@@ -15,6 +33,7 @@ export function getWindowBounds(window: ExpiringLifeWindow) {
 }
 
 export function clampAgeMonths(months: number): number {
+  if (!Number.isFinite(months)) return 0;
   return Math.min(MAX_AGE_MONTHS, Math.max(0, Math.round(months)));
 }
 
